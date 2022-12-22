@@ -8,11 +8,14 @@ from block import Block_list
 
 
 def clean_console():
-    os.system('cls')
+    if os.name == 'nt':
+        os.system('cls')
+    else:
+        os.system('clear')
     return 1
 
 
-def convertion_matrice(ligne_matrice):  # Fonction permettant la convertion d'une matrice en chaine de caractère
+def conversion_matrice(ligne_matrice):  # Fonction permettant la convertion d'une matrice en chaine de caractère
     chaine_liste = ""
     for i in range(len(ligne_matrice)):
         chaine_liste += str(ligne_matrice[i])
@@ -30,6 +33,7 @@ def cercle(dimension):
                 file_cercle.write("0")
         if i < dimension + 1:
             file_cercle.write("\n")
+    file_cercle.close()
 
 
 def losange(dimension):
@@ -46,7 +50,7 @@ def losange(dimension):
             plateau[i][j] = 1
         compt -= 1
     for lignes in plateau:
-        file_losange.write(convertion_matrice(lignes) + '\n')
+        file_losange.write(conversion_matrice(lignes) + '\n')
     file_losange.close()
     return 1
 
@@ -63,7 +67,7 @@ def triangle(dimension):  # Besoin des var dimension_l
     for b in range(dimension // 2 + 1):
         plateau.pop()
     for lignes in plateau:
-        file_triangle.write(convertion_matrice(lignes) + '\n')
+        file_triangle.write(conversion_matrice(lignes) + '\n')
 
     file_triangle.close()
     return 1
@@ -124,7 +128,6 @@ def print_grid(grid, dimension):
     print("")
 
 
-
 def save_grid(path: str, grid):
     save_file = open(path, "w")
     for lignes in grid:
@@ -135,8 +138,86 @@ def save_grid(path: str, grid):
         save_file.write(ligne)
 
 
+def invalid_choice(error):
+    print("Choix invalide, nombre de tentatives restantes: ", 3 - error)
+    return error + 1
+
+
 # FONCTIONS BLOCS
-def block_dispo(forme_plateau):
+
+def select_block(block_dispo, dimension):
+    cord_x = 0
+    cord_y = 0
+    block_choisi = int(input("Numero du block à placer: "))
+    while 0 >= block_choisi or block_choisi > len(block_dispo):
+        print("Numero Invalide")
+        block_choisi = int(input("Numero du block à placer: "))
+    cord_x = ord(str(input("Coordonnées de la colonne: ")))
+    while 97 > cord_x or cord_x >= 97 + dimension:
+        print("Coordonnées inconnues")
+        cord_x = ord(str(input("Coordonnées de la colonne: ")))
+    cord_y = ord(str(input("Coordonnées de la lignes: ")))
+    while 65 > cord_y or cord_y >= 65 + dimension:
+        print("Coordonnées inconnues")
+        cord_y = ord(str(input("Coordonnées de la lignes: ")))
+
+    cord_x = cord_x - 97
+    cord_y = cord_y - 65
+
+    # Vérifie si la postition est valid
+
+    return (block_choisi, cord_x, cord_y)
+
+
+def emplace_block(grid, block_choisi, cord_x, cord_y):
+    temp_x, temp_y = cord_x, cord_y
+    for i in range(len(block_choisi)):
+        temp_x = cord_x
+        for j in range(len(block_choisi)):
+            if block_choisi[len(block_choisi) - i - 1][j] == 2:
+                grid[temp_y][temp_x] = "2"
+            temp_x += 1
+        temp_y -= 1
+    return grid
+
+
+def valid_position(grid, block_choisi, cord_x, cord_y):
+    global error_count
+    temp_cord_x, temp_cord_y = cord_x, cord_y
+    modified_grid = []
+    for elm in grid:
+        modified_grid.append(elm)
+    # CAS 1, BLOCK A PLACE: VERIF SI CASE EXISTE, VERIF SI CASE !=2
+    # CAS 2, VIDE, ALORS ON SEN FICHE ET ON PASSE A CELLE DAPRES
+    # SENS DE DEPLACEMENT DE GAUCHE A DROITE ET BAS VERS LE HAUT
+
+    for i in range(len(block_choisi)):
+        temp_cord_x = cord_x
+        for j in range(len(block_choisi)):
+            if block_choisi[len(block_choisi) - 1 - i][j] == 2:  # derniere ligne
+                # Verifier que la case de cord_x,cord_y soit ==1
+
+                if temp_cord_x < len(grid) and temp_cord_y < len(grid):
+                    if grid[temp_cord_y][temp_cord_x] != "1":
+                        error_count += 1
+                        print("Position invalide, tentatives restantes: ", 3 - error_count)
+                        time.sleep(1)
+
+                        return False
+
+
+                else:
+                    error_count += 1
+                    print("Position invalide, tentatives restantes: ", 3 - error_count)
+                    time.sleep(1)
+                    return False
+            temp_cord_x += 1
+        temp_cord_y -= 1
+
+    return True
+
+
+def block_dispo(forme_plateau, politique):
     liste_blocks_dispo = []
     ajout_commum = []
     ajout_forme = []
@@ -145,77 +226,129 @@ def block_dispo(forme_plateau):
     elif forme_plateau == 'losange':
         matched_block_index = (33, 46)
     else:
-        matched_block_index = (20, 32)
+        matched_block_index = (20, 31)
     for i in range(0, 20):
-
         ajout_commum.append(Block_list[i])
     for i in range(matched_block_index[0], matched_block_index[1] + 1):
         ajout_forme.append(Block_list[i])
 
-    liste_blocks_dispo.append(ajout_commum)
-    liste_blocks_dispo.append(ajout_forme)
+    for elm in ajout_commum:
+        liste_blocks_dispo.append(elm)
+    for elm in ajout_forme:
+        liste_blocks_dispo.append(elm)
+
+    if politique == "Mode aleatoire":
+        block1, block2, block3 = 0, 0, 0
+        while block1 == block2 or block1 == block3 or block2 == block3:
+            block1 = randint(0, len(liste_blocks_dispo)-1)
+            block2 = randint(0, len(liste_blocks_dispo)-1)
+            block3 = randint(0, len(liste_blocks_dispo)-1)
+        liste_blocks_aleatoire = []
+        liste_blocks_aleatoire.append(liste_blocks_dispo[block1])
+        liste_blocks_aleatoire.append(liste_blocks_dispo[block2])
+        liste_blocks_aleatoire.append(liste_blocks_dispo[block3])
+        return liste_blocks_aleatoire
     return liste_blocks_dispo
 
 
-def print_block(forme_plateau,cpt):
-        # affichage des blocs communs
-    liste=block_dispo(forme_plateau)
-    compt=0
-    nb_espace=len(liste[0][0])*2+2
-    print(nb_espace)
+def reformat_lines(lines: list):
+    str_lines = ""
+    for elm in lines:
+        str_lines += str(elm)
+        str_lines += " "
+    str_lines = str_lines.replace("1", "•")
+    str_lines = str_lines.replace("2", "■")
+    return str_lines
 
 
-    print("",compt+1," "*nb_espace,compt+2," "*nb_espace,compt+3," "*nb_espace,compt+4)
-    for j in range(len(liste[0][0])):
-        for i in range(4):
-            print(liste[0][i][j], end=" ") #Print la premier ligne des 4 premier block
-        print("")
-    compt+=1
+def print_blocks(politique,liste_blocks):
     print("")
-
-
-
-def select_bloc(politique,forme_plateau):
-    cpt=0
-    selection_block=[]
+    compt = 0
+    num = 1
     if politique=="Mode ensemble":
-        print_block(forme_plateau,cpt)
+        for i in range(0, len(liste_blocks) // 5):
+            if i + compt > len(liste_blocks):  # Pour eviter le out of range
+                break
+
+            for k in range(len(liste_blocks[i + compt])):
+                if k - 1 == -1:
+                    for m in range(10):
+                        text_num = ""
+                        text_num += str(num)
+                        espace = len(liste_blocks[i + compt]) + 7 + len(liste_blocks[compt + i]) - 4  # Afficage adaptatif
+                        while len(text_num) != espace:
+                            text_num += " "
+
+                        print(text_num, end="")
+                        num += 1
+
+                    print("")
+                for j in range(10):
+                    print(reformat_lines(liste_blocks[j + compt][k]), end="   ")
+
+                print("")
+            print("")
+            compt += 10
+        # BLOCKS RESTANTS
+        for k in range(len(liste_blocks[-1])):
+            if k - 1 == -1:
+                for m in range(len(liste_blocks) - compt):
+                    text_num = ""
+                    text_num += str(num)
+                    espace = len(liste_blocks[compt]) + 7 + len(liste_blocks[compt]) - 4
+                    while len(text_num) != espace:
+                        text_num += " "
+                    print(text_num, end="")
+                    num += 1
+                print("")
+            for j in range(len(liste_blocks) - compt):  # 0 à 1
+                print(reformat_lines(liste_blocks[len(liste_blocks) - j - 1][k]), end="   ")
+            print("")
     else:
-        for i in range(3):
-            selection_block.append(block_dispo(forme_plateau)[randint(0, len(block_dispo(forme_plateau)))])
-        for elm in selection_block:
-            formated_block(elm)
-
-
-
-# FONCTIONS POSITIONNEMENT
-"""
-FONCTION A CONTINUER DANS TEST.PY
-def valid_position(grid,block,i,j):
-    #i est la ligne la plus bass j est le block le plus a gauche
-    for _ in range(len(block)):
-        for _ in range(len(block)[0]):
-            if grid[]
-    return True"""
-
-
+        for elm in liste_blocks:
+            print(num)
+            for lignes in elm:
+                print(reformat_lines(lignes))
+            print("")
+            num+=1
 # Annulation de lignes/colonnes et calcul du score
 def row_state(grid, i):
-    if "1" in grid[i]:
-        return False
-    else:
-        return True
+    for j in range(len(grid[i])):
+        if grid[i][j] != "0" and grid[i][j] != "2":
+            return False
+    return True
+
+
+def row_clear(grid, i):
+    global score
+    score += grid[i].count("2")
+    # Supprime la ligne complete
+    for j in range(len(grid)):
+        grid[i][j] = grid[i][j].replace("2", "1")
+    # Décale les lignes du dessus
+    for k in range(i, -1, -1):
+        for m in range(len(grid[k])):
+            if grid[k][m] == "1" or grid[k][m] == "2":
+                if (grid[k - 1][m] == "1" or grid[k - 1][
+                    m] == "2") and k - 1 >= 0:  # Car sinon cela va ramener la ligne du bas en haut
+
+                    grid[k][m] = grid[k - 1][m]
+    return True
 
 
 def col_state(grid, j):
-    elm_col = []
-    for ligne in grid:
-        elm_col.append(ligne[j])
-    if "1" in elm_col:
-        return False
-    else:
-        return True
+    for i in range(len(grid)):
+        if grid[i][j] != "0" and grid[i][j] != "2":
+            return False
+    return True
 
+
+def col_clear(grid, i):
+    global score
+    for j in range(len(grid)):
+        if grid[j][i] != "0":
+            score += 1
+            grid[j][i] = "1"
 
 
 def regles_ou_jouer():
@@ -232,31 +365,38 @@ def regles_ou_jouer():
 
 def parametre_jouer():
     clean_console()
-    print("Début du jeu")
+    print("Début du jeu\n")
     time.sleep(0.3)
     # Forme du plateau
     print("Choisir une forme:")
     liste_choix_forme = ["Cercle", "Triangle", "Losange"]
     forme_plateau = liste_choix_forme[cutie.select(liste_choix_forme)]
     forme_plateau = forme_plateau.lower()
-
+    print("")
     # Dimension du plateau
-    dimension = 20
-    while dimension < 21 or dimension > 26 or dimension % 2 == 0:
-        dimension = int(input("Largeur du plateau: "))
-
+    print("Choisir la taille du plateau:")
+    liste_choix_dimension = [21, 23, 25]
+    dimension = liste_choix_dimension[cutie.select(liste_choix_dimension)]
+    print("")
+    # Generation du fichier
+    if forme_plateau == 'cercle':
+        cercle(dimension)
+    if forme_plateau == 'triangle':
+        triangle(dimension)
+    elif forme_plateau == 'losange':
+        losange(dimension)
     # Politique de suggestion de block
-    liste_choix_politique = ["Mode ensemble", "Mode Aleatoire"]
+    print("Choisir la politique d'affichage (cf. Règles)")
+    liste_choix_politique = ["Mode ensemble", "Mode aleatoire"]
     politique = liste_choix_politique[cutie.select(liste_choix_politique)]
     debut_partie(forme_plateau, dimension, politique)
-    return 1
+    return True
 
 
 def regles():
     # Faire les regle et à la fin, on revient au menu
     clean_console()
     tprint("Regles")
-
 
     print("'Tetriste ? Arrete' est un dérivé du célèbre jeu Tetris.\n\n"
           "Principe du jeu:\n"
@@ -287,18 +427,62 @@ def regles():
 
 
 def debut_partie(forme_plateau, dimension, politique):
-    global liste_block
-    liste_block=block_dispo(forme_plateau)#liste des block a dispo
-
+    global score, error_count
+      # liste des block a dispo
+    score = 0
+    error_count = 0
 
     # forme_plateau : "triangle" "losange "cercle"
     # dimension entier
     # politique : "Mode ensemble" "Mode Aleatoire
     # génération du plateau
-    grid = read_grid(forme_plateau + ".txt")
-    print_grid(grid, dimension)  # Poser la question si l'argument dimension supp est autorisé
-    print(select_bloc(politique, forme_plateau))
+    grid = read_grid(forme_plateau + ".txt")  # Matrice de caractere numérique
+    # À faire en boucle
+    while error_count < 3:
+        liste_blocks = block_dispo(forme_plateau, politique)
+        clean_console()
 
-    return 1
+        print("")
 
+        print_grid(grid, dimension)  # Poser la question si l'argument dimension supp est autorisé
 
+        if error_count == 0:
+            print("Score actuel:", score)
+        else:
+            print("Score actuel:", score, "Tentative restantes:", 3 - error_count)
+        print_blocks(politique,liste_blocks)
+        if error_count == 0:
+            print("Score actuel:", score)
+        else:
+            print("Score actuel:", score, "Tentative restantes:", 3 - error_count)
+        block_data = select_block(liste_blocks,
+                                  dimension)  # block data est un tuple contenant le block choisi et les coordonnées
+        block_choisi = liste_blocks[block_data[0] - 1]  # le block à placer
+        if valid_position(grid, block_choisi, block_data[1], block_data[2]):
+            grid = emplace_block(grid, block_choisi, block_data[1], block_data[2])
+
+        for i in range(len(grid)):
+            if row_state(grid, i):
+                row_clear(grid, i)
+            if col_state(grid, i):
+                col_clear(grid, i)
+
+    if error_count >= 3:
+        print("")
+        print("Trop de position invalides!\n"
+              "Fin du jeu\n"
+              "Score final: ", score)
+
+        liste_choix_rejouer = ["Rejouer", "Quitter"]
+        choix_rejouer = liste_choix_rejouer[cutie.select(liste_choix_rejouer)]
+        if choix_rejouer == "Rejouer":
+            regles_ou_jouer()
+        else:
+            quit()
+    pass
+
+# TODO:
+# [ ]: Revoir le fait de ne pas placer un bloc quand invalide
+# [x]: Faire le compteur du score
+# [ ]: Afficher les block
+# [ ]: Faire des saisie sécurisées
