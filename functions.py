@@ -148,10 +148,19 @@ def invalid_choice(error):
 def select_block(block_dispo, dimension):
     cord_x = 0
     cord_y = 0
+
+
+    block_choisi=input("Numero du block à placer: ")
+    while block_choisi.isdigit() == False or (0 >= int(block_choisi) or int(block_choisi) > len(block_dispo)):
+        if not block_choisi.isdigit() : print("Un nombre est requis")
+        else: print("Aucun block ne correspond ")
+        block_choisi = input("Numero du block à placer: ")
+
+    """
     block_choisi = int(input("Numero du block à placer: "))
     while 0 >= block_choisi or block_choisi > len(block_dispo):
         print("Numero Invalide")
-        block_choisi = int(input("Numero du block à placer: "))
+        block_choisi = int(input("Numero du block à placer: "))"""
     cord_x = ord(str(input("Coordonnées de la colonne: ")))
     while 97 > cord_x or cord_x >= 97 + dimension:
         print("Coordonnées inconnues")
