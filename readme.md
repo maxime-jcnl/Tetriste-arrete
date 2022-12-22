@@ -40,5 +40,5 @@
 - Contrôle / Navigation :
   - Touche flèche du haut / du bas pour faire son choix dans les menus
   - Touche "Entrée" pour valider son choix
-
+  - Combinaison Ctrl+C pour quitter le programme
  
