@@ -60,11 +60,11 @@ def triangle(dimension):  # Besoin des var dimension_l
     plateau = [[0 for _ in range(0, dimension)] for _ in range(0, dimension)]
     compteur = 0
     milieu = (dimension // 2)
-    for i in range(dimension // 2):
+    for i in range(dimension // 2+1):
         for j in range(milieu - compteur, milieu + compteur + 1):
             plateau[i][j] = 1
         compteur += 1
-    for b in range(dimension // 2 + 1):
+    for b in range(dimension // 2 ):
         plateau.pop()
     for lignes in plateau:
         file_triangle.write(conversion_matrice(lignes) + '\n')
@@ -97,7 +97,7 @@ def print_grid(grid, dimension):
         print(alphabet_min[i], end=" ")
     print("")
 
-    for i in range(dimension * 2 + 3):  # 3 étant l'espacement de la gird
+    for i in range(dimension * 2 + 3):  # 3 étant l'espacement de la grid
         if i == 0:
             print("  ╔", end="")
         elif i == (dimension * 2) + 2:
@@ -138,6 +138,9 @@ def save_grid(path: str, grid):
         save_file.write(ligne)
 
 
+
+
+
 def invalid_choice(error):  # Affiche que l'utilisateur a rentré une mauvaise position et ses tentatives restantes
     print("Choix invalide, nombre de tentatives restantes: ", 3 - error)
     return error + 1  # Cela ajoutera 1 au compteur d'erreur
@@ -154,17 +157,17 @@ def select_block(block_dispo, dimension):  # Fonction qui permet de choisir le b
             print("Aucun block ne correspond ")
         block_choisi = input("Numéro du block à placer: ")
     block_choisi = int(block_choisi)
-    cord_x = ord(str(input("Coordonnées de la colonne: ")))
-    while 97 > cord_x or cord_x >= 97 + dimension:  # on compare le code ascii des lettres rentrées avec celles ce
+    cord_x = str(input("Coordonnées de la colonne: "))
+    while len(cord_x)>1 or 97 >ord(cord_x) or ord(cord_x) >= 97 + dimension:  # on compare le code ascii des lettres rentrées avec celles ce
         print("Coordonnées inconnues")
-        cord_x = ord(str(input("Coordonnées de la colonne: ")))
-    cord_y = ord(str(input("Coordonnées de la lignes: ")))
-    while 65 > cord_y or cord_y >= 65 + dimension:
+        cord_x = str(input("Coordonnées de la colonne: "))
+    cord_y = str(input("Coordonnées de la lignes: "))
+    while len(cord_y)>1 or 65 > ord(cord_y) or ord(cord_y) >= 65 + dimension:
         print("Coordonnées inconnues")
-        cord_y = ord(str(input("Coordonnées de la lignes: ")))
+        cord_y = str(input("Coordonnées de la lignes: "))
 
-    cord_x = cord_x - 97
-    cord_y = cord_y - 65
+    cord_x = ord(cord_x) - 97
+    cord_y = ord(cord_y) - 65
 
     # Vérifie si la position est valide
 
@@ -192,7 +195,7 @@ def valid_position(grid, block_choisi, cord_x,
         for j in range(len(block_choisi)):
             if block_choisi[len(block_choisi) - 1 - i][j] == 2:  # dernière ligne
                 # Verifier que la case de cord_x,cord_y soit == 1
-                if temp_cord_x < len(grid) and temp_cord_y < len(grid):
+                if temp_cord_x < len(grid[0]) and temp_cord_y < len(grid[0]):
                     if grid[temp_cord_y][temp_cord_x] != "1":
                         error_count += 1
                         print("Position invalide, tentatives restantes: ", 3 - error_count)
@@ -317,24 +320,29 @@ def row_clear(grid, i):  # Suppression d'une ligne
     global score  # Afin de mettre à jour le score
     score += grid[i].count("2")  # Ajoute au score le nombre de cases supprimées
     # Supprime la ligne complete
-    for j in range(len(grid)):
-        grid[i][j] = grid[i][j].replace("2", "1")
+    for j in range(len(grid[0])):
+        if grid[i][j]=="2":
+            grid[i][j]="1"
     # Décale les lignes du dessus
-    for k in range(i, -1, -1):
+    """for k in range(i, 0, -1):
         for m in range(len(grid[k])):
             if grid[k][m] == "1" or grid[k][m] == "2":
                 if (grid[k - 1][m] == "1" or grid[k - 1][m] == "2") and k - 1 >= 0:
                     # Car sinon cela va ramener la ligne du bas en haut
                     grid[k][m] = grid[k - 1][m]
-    return True  # Retour de test, signifie que la fonction s'est bien passée
+    return True  # Retour de test, signifie que la fonction s'est bien passée"""
 
 
 def col_state(grid, j):  # Verifie si une colonne est pleine
+    compteur=0
     for i in range(len(grid)):
+        if grid[i][j] == "2":
+            compteur+=1
         if grid[i][j] != "0" and grid[i][j] != "2":
             return False
-    return True
-
+    if compteur>1: #Car une colonne ne fait pas 1 block de haut
+        return True
+    else: return False
 
 def col_clear(grid, i):  # Supprime la colonne
     global score
@@ -445,14 +453,10 @@ def debut_partie(forme_plateau, dimension, politique):  #
         print_grid(grid, dimension)  # Poser la question si l'argument dimension supp est autorisé
 
         if error_count == 0:
-            print("Score actuel:", score)
+            print ("Score actuel:", score,end="")
         else:
-            print("Score actuel:", score, "Tentative restantes:", 3 - error_count)
+            print ("Score actuel:", score, "Tentative restantes:", 3 - error_count,end="")
         print_blocks(politique, liste_blocks)
-        if error_count == 0:
-            print("Score actuel:", score)
-        else:
-            print("Score actuel:", score, "Tentative restantes:", 3 - error_count)
         block_data = select_block(liste_blocks,
                                   dimension)  # block data est un tuple contenant le block choisi et les coordonnées
         block_choisi = liste_blocks[block_data[0] - 1]  # le block à placer
