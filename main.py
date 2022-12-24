@@ -1,15 +1,14 @@
+##########################################################
+#   Projet : Tetriste? Arrete!                           #
+#   Fichier : main.py                                    #
+#   Auteurs : Anaëlle POLART & Maxime JACONELLI          #
+#   Rôle : Appeler les fonctions de lancement du jeu     #
+##########################################################
+
 from functions import *
 
-#génération des fichiers aux dimensions définie précédemment
-
-
-# PROBLEME A REGLER :
-# -quand dimension = 23: beug daffichage
-# -générer des fichier dans un dossier files
-
-
-
 if __name__ == '__main__':
-
-    regles_ou_jouer()
-
+    if start_or_rules()=="play":
+        game_configuration()
+    elif start_or_rules()=="rules":
+        rules()

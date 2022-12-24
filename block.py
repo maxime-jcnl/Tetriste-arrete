@@ -1,3 +1,11 @@
+###########################################################################
+#   Projet : Tetriste? Arrete!                                            #
+#   Fichier : block.py                                                    #
+#   Auteurs : Anaëlle POLART & Maxime JACONELLI                           #
+#   Rôle : Contient les blocks et la liste des blocks nécessaires au jeu  #
+###########################################################################
+
+
 communs_1 = [[1, 1, 1, 1],
              [1, 1, 1, 1],
              [2, 1, 1, 1],
@@ -348,15 +356,9 @@ Block_list = [
     # BLOCKS LOSANGE
     losange_1, losange_2, losange_3, losange_4, losange_5, losange_6, losange_7, losange_8, losange_9, losange_10,
     losange_11,
-    losange_12,  losange_13, losange_14,
+    losange_12, losange_13, losange_14,
     # BLOCKs TRIANGLE
     triangle_1, triangle_2, triangle_3, triangle_4, triangle_5, triangle_6, triangle_7, triangle_8, triangle_9,
     triangle_10, triangle_11
 ]
 
-
-
-# 0 à 19 : commun
-# 20 à 31 : cercle
-# 32 à 45 : losange
-# 46 à 56 : triangle
